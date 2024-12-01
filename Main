@@ -1,0 +1,151 @@
+#include "User.h"
+#include "Music.h"
+#include "Merchandise.h"
+#include "Order.h"
+#include <iostream>
+#include <algorithm> 
+#include <vector>
+#include <limits>
+
+using namespace std;
+
+void clearInputBuffer() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+void showMainMenu() {
+    cout << "\n--- Main Menu ---\n";
+    cout << "1. View Merchandise\n";
+    cout << "2. View Saved Music\n";
+    cout << "3. Place an Order\n";
+    cout << "4. View Order History\n";
+    cout << "5. Manage User Details\n";
+    cout << "0. Exit\n";
+    cout << "Enter your choice: ";
+}
+
+void viewMerchandise(const vector<Merchandise>& merchandiseList) {
+    if (merchandiseList.empty()) {
+        cout << "No merchandise available.\n";
+        return;
+    }
+    for (const auto& item : merchandiseList) {
+        item.display();
+        cout << "---------------------\n";
+    }
+}
+
+void viewSavedMusic(const User& user) {
+    user.viewSavedMusic();
+}
+
+void placeOrder(User& user, vector<Merchandise>& merchandiseList) {
+    vector<Merchandise> cart;
+    int merchId;
+    char addMore = 'y';
+
+    while (addMore == 'y' || addMore == 'Y') {
+        cout << "Enter Merchandise ID to add to cart: ";
+        cin >> merchId;
+
+        auto it = find_if(merchandiseList.begin(), merchandiseList.end(), [merchId](const Merchandise& m) {
+            return m.getMerchandiseId() == merchId;
+        });
+
+        if (it != merchandiseList.end()) {
+            cart.push_back(*it);
+            cout << "Item added to cart.\n";
+        } else {
+            cout << "Merchandise not found.\n";
+        }
+
+        cout << "Add more items? (y/n): ";
+        cin >> addMore;
+    }
+
+    Order order = Order::createOrder(user.getUserId(), cart);
+    user.addOrder(order);
+    cout << "Order placed successfully!\n";
+}
+
+void manageUserDetails(User& user) {
+    cout << "\n--- Manage User Details ---\n";
+    cout << "Current Name: " << user.getName() << "\n";
+    cout << "1. Update Name\n";
+    cout << "2. Update Email\n";
+    cout << "3. Update Password\n";
+    cout << "0. Return to Main Menu\n";
+
+    int choice;
+    cin >> choice;
+    clearInputBuffer();
+
+    string newValue;
+    switch (choice) {
+        case 1:
+            cout << "Enter new name: ";
+            getline(cin, newValue);
+            user.setName(newValue);
+            cout << "Name updated successfully.\n";
+            break;
+        case 2:
+            cout << "Enter new email: ";
+            getline(cin, newValue);
+            user.setEmail(newValue);
+            cout << "Email updated successfully.\n";
+            break;
+        case 3:
+            cout << "Enter new password: ";
+            getline(cin, newValue);
+            user.setPassword(newValue);
+            cout << "Password updated successfully.\n";
+            break;
+        case 0:
+            return;
+        default:
+            cout << "Invalid choice.\n";
+    }
+}
+
+int main() {
+    // Sample data
+    vector<Merchandise> merchandiseList = {
+        Merchandise(1, "T-Shirt", "Band A", 19.99, "Clothing", 50),
+        Merchandise(2, "Vinyl Record", "Artist B", 29.99, "Vinyl", 30)
+    };
+
+    User user(1001, "Alessio", "alessio@example.com", "password123");
+
+    int choice;
+    do {
+        showMainMenu();
+        cin >> choice;
+        clearInputBuffer();
+
+        switch (choice) {
+            case 1:
+                viewMerchandise(merchandiseList);
+                break;
+            case 2:
+                viewSavedMusic(user);
+                break;
+            case 3:
+                placeOrder(user, merchandiseList);
+                break;
+            case 4:
+                user.viewOrderHistory();
+                break;
+            case 5:
+                manageUserDetails(user);
+                break;
+            case 0:
+                cout << "Exiting the program. Goodbye!\n";
+                break;
+            default:
+                cout << "Invalid choice. Please try again.\n";
+        }
+    } while (choice != 0);
+
+    return 0;
+}
